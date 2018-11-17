@@ -129,32 +129,13 @@ $(document).ready(function () {
 </div>
 
 
-<pre class="r"><code>library(caret)</code></pre>
-<pre><code>## Loading required package: lattice</code></pre>
-<pre><code>## Loading required package: ggplot2</code></pre>
-<pre class="r"><code>library(rpart)
-library(rpart.plot)
-library(dplyr)</code></pre>
-<pre><code>## 
-## Attaching package: 'dplyr'</code></pre>
-<pre><code>## The following objects are masked from 'package:stats':
-## 
-##     filter, lag</code></pre>
-<pre><code>## The following objects are masked from 'package:base':
-## 
-##     intersect, setdiff, setequal, union</code></pre>
-<pre class="r"><code>library(randomForest)</code></pre>
-<pre><code>## randomForest 4.6-14</code></pre>
-<pre><code>## Type rfNews() to see new features/changes/bug fixes.</code></pre>
-<pre><code>## 
-## Attaching package: 'randomForest'</code></pre>
-<pre><code>## The following object is masked from 'package:dplyr':
-## 
-##     combine</code></pre>
-<pre><code>## The following object is masked from 'package:ggplot2':
-## 
-##     margin</code></pre>
-<pre class="r"><code>#read in training and test data
+<pre class="r"><code>suppressMessages(library(caret))
+suppressMessages(library(rpart))
+suppressMessages(library(rpart.plot))
+suppressMessages(library(dplyr))
+suppressMessages(library(randomForest))
+
+#read in training and test data
 pmlTrain &lt;-read.csv(&quot;C:/coursera/ML/pml-training.csv&quot;, header = TRUE)
 str(pmlTrain)</code></pre>
 <pre><code>## 'data.frame':    19622 obs. of  160 variables:
@@ -361,11 +342,11 @@ str(pmlTest)</code></pre>
 ##  $ min_yaw_dumbbell        : logi  NA NA NA NA NA NA ...
 ##  $ amplitude_roll_dumbbell : logi  NA NA NA NA NA NA ...
 ##   [list output truncated]</code></pre>
-<pre class="r"><code>#The first seven columns appear to be irrelevant data
+<pre class="r"><code>#The first seven columns appear to be irrelevant data to the prediction
 pmlTrainSub &lt;- select(pmlTrain,8:160)
 pmlTestSub &lt;- select(pmlTest,8:160)
 
-#Many columns have high numbers of NAs, so remove ethese
+#Many columns have high numbers of NAs, so remove any column that has NAs
 pmlTrainSub2 &lt;- pmlTrainSub[apply(pmlTestSub, 2, function(x) sum(is.na(x))) == 0]
 pmlTestSub2 &lt;- pmlTestSub[apply(pmlTestSub, 2, function(x) sum(is.na(x))) == 0]
 
@@ -380,6 +361,7 @@ testing = pmlTrainSub2[-inTrain,]
 #nrow(testing)
 #str(training)
 
+#Run decision tree model
 cartModel &lt;- rpart(classe ~ ., data = training, method = 'class', xval = 5)
 print(cartModel)</code></pre>
 <pre><code>## n= 14718 
@@ -437,6 +419,7 @@ print(cartModel)</code></pre>
 ##            23) total_accel_dumbbell&lt; 5.5 558   141 D (0 0.16 0.0036 0.75 0.09) *
 ##       3) roll_belt&gt;=130.5 1257    12 E (0.0095 0 0 0 0.99) *</code></pre>
 <pre class="r"><code>predictionsCart &lt;- predict(cartModel, testing, type = &quot;class&quot;)
+#Accuracy of 75%
 confusionMatrix(predictionsCart, testing$classe)</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
@@ -469,7 +452,8 @@ confusionMatrix(predictionsCart, testing$classe)</code></pre>
 ## Detection Rate         0.2571   0.1105   0.1501   0.1066   0.1250
 ## Detection Prevalence   0.3057   0.1623   0.2341   0.1578   0.1401
 ## Balanced Accuracy      0.9181   0.7535   0.8795   0.7946   0.8309</code></pre>
-<pre class="r"><code>rfModel &lt;- randomForest(classe ~ ., data = training)
+<pre class="r"><code>#Try random forest model
+rfModel &lt;- randomForest(classe ~ ., data = training)
 print(rfModel)</code></pre>
 <pre><code>## 
 ## Call:
@@ -486,7 +470,8 @@ print(rfModel)</code></pre>
 ## C    0   17 2549    1    0 0.0070120764
 ## D    0    0   30 2380    2 0.0132669983
 ## E    0    0    1    5 2700 0.0022172949</code></pre>
-<pre class="r"><code>predictionsRF &lt;- predict(rfModel, testing, type = &quot;class&quot;)
+<pre class="r"><code>#Accuracy of &gt; 99%
+predictionsRF &lt;- predict(rfModel, testing, type = &quot;class&quot;)
 confusionMatrix(predictionsRF, testing$classe)</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
@@ -519,7 +504,13 @@ confusionMatrix(predictionsRF, testing$classe)</code></pre>
 ## Detection Rate         0.2845   0.1931   0.1725   0.1623   0.1821
 ## Detection Prevalence   0.2847   0.1943   0.1743   0.1646   0.1821
 ## Balanced Accuracy      0.9999   0.9982   0.9936   0.9937   0.9956</code></pre>
-<pre class="r"><code>finalPredictions &lt;- predict(rfModel, pmlTestSub2)</code></pre>
+<pre class="r"><code>finalPredictions &lt;- predict(rfModel, pmlTestSub2)
+
+#final predictions
+print(finalPredictions)</code></pre>
+<pre><code>##  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 
+##  B  A  B  A  A  E  D  B  A  A  B  C  B  A  E  E  A  B  B  B 
+## Levels: A B C D E</code></pre>
 
 
 
